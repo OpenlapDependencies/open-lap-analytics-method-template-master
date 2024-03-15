@@ -47,29 +47,19 @@ The following steps must be followed by the developer to implement a new Analyti
 These steps are explained in more details with concrete examples in the following sections.
 
 ### Step 1. Setting up the development environment
-To develop a new analytics method, you need to install the following softwares.
-* [Java Development Kit (JDK) 7+](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
+To create a new analytics method, it is essential to install the following software:
+* Java Development Kit (JDK) 7+: Ensure that you have Java Development Kit version 7 or above installed on your system (Amazon corretto 11 maximum in current OpenLap version).
 * Any Integrated Development Environment (IDE) for Java development, such as, [Intellij IDEA](https://www.jetbrains.com/idea/download), [NetBeans](https://netbeans.org/downloads/), [Eclipse](https://eclipse.org/downloads/), etc. 
 
-In the following steps we are going to use the Intellij IDEA for developing the sample analytics method using maven.
+In the upcoming steps, IntelliJ IDEA is used to develop a sample analytics method using Maven.
 
 ### Step 2. Creating project and importing the dependencies into it.
 * Create a new project. `File -> New -> Project`
 * Select `Maven` from the left and click `Next`.
-* Enter the `GroupId`, `ArtifactId` and `Version`, e.g.
-
-	`GroupId`: com.openlap.analyticsmethods.Samples
-	
-	`ArtifactId`: ItemCounter
-	
-	`Version`: 1.0-SNAPSHOT
-	
-* Specify project name and location, e.g.
-
-	`Project Name`: Item-Counter
-	
-	`Project Location`: C:\Users\xxxxx\Documents\IdeaProjects\Item-Counter
-	
+* Enter the GroupId, ArtifactId and Version etc. To facilitate the retrieval of a recently implemented analytics method from the fat JAR file, 
+it is essential to set its GroupId correctly. Otherwise, identifying the newly added analytics method class becomes challenging due to the presence 
+of numerous class files from the dependencies within the fat JAR file. The GroupId needs to be set as "com.openlap.AnalyticsMethods.Prototypes" 
+without the quotes.
 * Add JitPack repository to the `pom.xml` file.
 
 Maven:
@@ -82,127 +72,240 @@ Maven:
 </repositories>
 ```
 
-* Add dependency of the OpenLAP-AnalyticsMethodsFramework project to the ‘pom.xml’ file. The latest version of the dependency xml can be retrieved from the  [![](https://jitpack.io/v/OpenLearningAnalyticsPlatform/OpenLAP-AnalyticsMethodsFramework.svg)](https://jitpack.io/#OpenLearningAnalyticsPlatform/OpenLAP-AnalyticsMethodsFramework). 
+* Add dependency of the OpenLAP-AnalyticsMethodsFramework project to the ‘pom.xml’ file. The latest version of the dependency xml can be retrieved from the  [![](https://jitpack.io/v/OpenLearningAnalyticsPlatform/OpenLAP-AnalyticsMethodsFramework.svg)]([https://jitpack.io/#OpenLearningAnalyticsPlatform/OpenLAP-AnalyticsMethodsFramework](https://jitpack.io/#OpenlapDependencies/open-lap-analytics-method-template-master/)). 
 
 Maven:
 ```xml
-	<dependency>
-	    <groupId>com.github.OpenLearningAnalyticsPlatform</groupId>
-	    <artifactId>OpenLAP-AnalyticsMethodsFramework</artifactId>
-	    <version>v2.2.1</version>
-	</dependency>
+<dependency>
+    <groupId>com.github.OpenlapDependencies</groupId>
+    <artifactId>open-lap-analytics-method-template-master</artifactId>
+    <version>version1</version>
+</dependency>
 ```
 
-### Step 3. Create a class that extends the `AnalyticsMethod`.
-In the project create a class that extends the `AnalyticsMethod` as shown in the example below. The class should be contained in a package within the `src` folder to avoid naming conflicts.
+### Step 3. Create a class that extends the abstract AnalyticsMethod class.
+Within the project, create a class that extends the AnalyticsMethod, following the example provided below. In this example, the class is called ItemCount. Ensure the class resides in a package called "com.openlap.AnalyticsMethods.Prototypes".
 
 ```java
-package com.openlap.analyticsmethods.samples;
-
-import core.AnalyticsMethod;
+package com.openlap.AnalyticsMethods.Prototypes;
+import com.openlap.template.AnalyticsMethod;
 import java.io.InputStream;
 
 public class ItemCount extends AnalyticsMethod {
+     @Override
+    public String getAnalyticsMethodName() {
+        ...
+    }
+
+    @Override
+    public String getAnalyticsMethodDescription() {
+        ...
+    }
+
+    @Override
+    public String getAnalyticsMethodCreator() {
+        ...
+    }
+
+    @Override
     protected void implementationExecution() {
-		...
+        ...
     }
 
-    public Boolean hasPMML() {
-		...
-    }
-
+    @Override
     public InputStream getPMMLInputStream() {
-		...
+        ...
+    }
+
+    @Override
+    public Boolean hasPMML() {
+        ...
     }
 }
 ```
 ### Step 4. Define the input and output `OpenLAPDataSet`.
-The input and output `OpenLAPDataSet` should be defined in the constructor of the extended class `ItemCount` as shown in the example below.
+Define the input and output OpenLAP-DataSets within the constructor of the class "ItemCount" following the example provided below. The input, output, params and type should be set in the constructor. The params is used to obtain additional user input from the user interface at runtime. The type indicates whether the analytics method is of normal or machine learning type. Inputs defined here will be the inputs expected by the class. The outputs will be on the hand the value returned by the class in the impelementationExecution method.  (In case a new visualisation method is also to be created by the user, it should be noted that the outputs defined here will be received in the visualization method by for example defining inputs of the same column data type in its initializeDataSetConfiguration() method. For instance, the current given example indicates that the output has two columns with a type text and numeric. Consequently, visualisation methods chosen to visualize the output of this analytics method, need to expect two input columns of data type text and numeric.)
 
 ```java
-// Declaration of input and output OpenLAPDataSet by adding OpenLAPDataColum objects with the OpenLAPDataColumnFactory
 public ItemCount()
-    {
-        this.setInput(new OpenLAPDataSet());
-        this.setOutput(new OpenLAPDataSet());
+{
+    this.setInput(new OpenLAPDataSet());
+    this.setOutput(new OpenLAPDataSet());
+    this.setParams(new OpenLAPDynamicParams());
+    this.setType("normal");
 
-        try {
-            this.getInput().addOpenLAPDataColumn(
-                    OpenLAPDataColumnFactory.createOpenLAPDataColumnOfType("items_list", OpenLAPColumnDataType.STRING, true, "Items List", "List of items to count")
-            );
-            this.getOutput().addOpenLAPDataColumn(
-                    OpenLAPDataColumnFactory.createOpenLAPDataColumnOfType("item_name", OpenLAPColumnDataType.STRING, true, "Item Names", "List of top 10 most occuring items in the list")
-            );
-            this.getOutput().addOpenLAPDataColumn(
-                    OpenLAPDataColumnFactory.createOpenLAPDataColumnOfType("item_count", OpenLAPColumnDataType.INTEGER, true, "Item Count", "Number of time each item occured in the list")
-            );
-        } catch (OpenLAPDataColumnException e) {
-            e.printStackTrace();
-        }
+    try {
+        this.getInput().addOpenLAPDataColumn(
+                OpenLAPDataColumnFactory
+                    .createOpenLAPDataColumnOfType(
+                        "items",
+                        OpenLAPColumnDataType.Text,
+                        true,
+                        "Items List",
+                        "List of items to count")
+        );
+        this.getOutput().addOpenLAPDataColumn(
+                OpenLAPDataColumnFactory
+                    .createOpenLAPDataColumnOfType(
+                        "item_name",
+                        OpenLAPColumnDataType.Text,
+                        true,
+                        "Item Names",
+                        "List of top 10 most occuring items in the list")
+        );
+        this.getOutput().addOpenLAPDataColumn(
+                OpenLAPDataColumnFactory
+                    .createOpenLAPDataColumnOfType(
+                        "item_count",
+                        OpenLAPColumnDataType.Numeric,
+                        true,
+                        "Item Count",
+                        "Number of time each item occured in the list")
+        );
+    } catch (OpenLAPDataColumnException e) {
+        e.printStackTrace();
     }
+
+    try {
+        this.getParams().addOpenLAPDynamicParam(
+                OpenLAPDynamicParamFactory
+                    .createOpenLAPDataColumnOfType(
+                        "return_count",
+                        OpenLAPDynamicParamType.Textbox,
+                        OpenLAPDynamicParamDataType.INTEGER,
+                        "Number of items to return (N)",
+                        "Specify the number of items" +
+                                " that need to be returned. e.g. 10 will return top " +
+                                 "10 items. -1 will return all items.",
+                        10,
+                        "",
+                        true));
+    } catch (OpenLAPDynamicParamException var2) {
+        var2.printStackTrace();
+    }
+}
 ```
 
 ### Step 5. Implement the abstract methods.
-Three abstract methods of the `AnalyticsMethod` class (as discussed in the Fundamental Concept section) should be implemented. The example below shows a sample implementation of the analytics method which accepts the list of string items as an input, count the number of time each item occurred in the list and return the top 10 most occurred items.
+Implement the abstract methods of the extended AnalyticsMethod class, as discussed earlier. The example below illustrates a sample implementation of the analytics method. The implementation given in the method implementationExecution takes a list of string items as input, counts the occurrences of each item in the list, and returns the top 10 most frequently occurring items. The developer needs to replace this code with their own business logic.
 
 ```java
-    @Override
-    protected void implementationExecution() { 
-	LinkedHashMap<String, Integer> itemCount = new LinkedHashMap<String, Integer>();
-	
-	    //Iiterate over each item of the column
-	    for (Object item : this.getInput().getColumns().get("items_list").getData()) {
-	        if (itemCount.containsKey(item))
-	            itemCount.put((String) item, itemCount.get((String) item) + 1);
-	        else
-	            itemCount.put((String) item, 1);
-	    }
-	    
-	    Set<Map.Entry<String, Integer>> itemCountSet = itemCount.entrySet();
-	    int counter = 10;
-	    if(itemCountSet.size()<10)
-	        counter = itemCountSet.size();
-	        
-	//Finding the item with the highest count, adding it to the output OpenLAPDataSet and removing it from the itemCount Array.
-	    for(;counter>0;counter--){
-	        Iterator<Map.Entry<String, Integer>> itemCountSetIterator = itemCountSet.iterator();
-	        Map.Entry<String, Integer> topEntry = itemCountSetIterator.next();
-	        while (itemCountSetIterator.hasNext()) {
-	            Map.Entry<String, Integer> curEntry = itemCountSetIterator.next();
-	            if (curEntry.getValue() > topEntry.getValue())
-	                topEntry = curEntry;
-	        }
-	        getOutput().getColumns().get("item_name").getData().add(topEntry.getKey());
-	        getOutput().getColumns().get("item_count").getData().add(topEntry.getValue());
-	        itemCountSet.remove(topEntry);
-	    }
-    }
+@Override
+protected void implementationExecution() {
+    try{
+        var itemNameAndCount = new LinkedHashMap<String, Integer>();
 
-    @Override
-    public InputStream getPMMLInputStream() {
-	//if `hasPMML()` return true than example can be like 
-	//return getClass().getResourceAsStream(PMML_RESOURCE_PATH);
-	
-        return null;
-    }
+        int returnCount = (Integer)((OpenLAPDynamicParam)  
+                                    this.getParams()
+                                        .getParams()
+                                        .get("return_count")).getValue();
 
-    @Override
-    public Boolean hasPMML() {
-        return false;
+
+        //Iiterate over each item of the column
+        var items = ((OpenLAPDataColumn)
+            this.getInput().getColumns().get("items")).getData();
+        
+        for (Object item : items) {
+            if (itemNameAndCount.containsKey(item))
+                itemNameAndCount
+    .put((String) item, itemNameAndCount.get((String) item) + 1);
+            else
+                itemNameAndCount.put((String) item, 1);
+        }
+
+        Set<Map.Entry<String, Integer>> itemsSet = itemNameAndCount.entrySet();
+
+        if (itemsSet.size() < returnCount || returnCount == -1)
+            returnCount = itemsSet.size();
+
+        //Finding the item with the highest count,
+        // adding it to the output OpenLAPDataSet
+        // and removing it from the itemsSet.
+        while(returnCount>0){
+            var itemsIterator = itemsSet.iterator();
+
+            var topEntry = itemsIterator.next();
+
+            while (itemsIterator.hasNext()) {
+                Map.Entry<String, Integer> currentEntry = itemsIterator.next();
+
+                if (currentEntry.getValue() > topEntry.getValue())
+                    topEntry = currentEntry;
+            }
+
+            getOutput().getColumns().get("item_name").getData()
+            .add(topEntry.getKey());
+            
+            getOutput().getColumns().get("item_count").getData()
+            .add(topEntry.getValue());
+
+            itemsSet.remove(topEntry);
+            returnCount--;
+        }
+    }catch (Exception e) {
+        System.out.println("Current analytics method taken from the jar file threw an exception:");
+        System.out.println(e.getMessage() + "; at line:" + e.getStackTrace()[0].getLineNumber());
     }
+}
+
+@Override
+public String getAnalyticsMethodName() {
+    return "Count N";
+}
+
+@Override
+public String getAnalyticsMethodDescription() {
+    return "Count, sort and return N.";
+}
+
+@Override
+public String getAnalyticsMethodCreator() {
+    return "Developer Name";
+}
+
+@Override
+public InputStream getPMMLInputStream() {
+    return null;
+}
+
+@Override
+public Boolean hasPMML() {
+    return false;
+}
 ```
 
-#### Step 6. Pack the binaries into a JAR bundle.
+#### Step 6. Pack the project into a fat jar file.
 
-The complied binaries must be packed into a JAR bundle. It should be noted that the file name of the JAR bundle should consists of integers and characters only. The JAR bundle can easily be generated in the Intellij IDEA by following the following steps:
-* Open the `Run/Debug Configurations`. `Run -> Edit Configurations…`
-* Add new configuration by pressing the `+` on the top left.
-* Select `Maven` from the available options.
-* Set the `Name` to "Generate JAR" (without double quotes).
-* On the `Parameters` tab set `Command line` = clean install
-* Run the project by pressing `Shift + F10` or from `Run -> Run 'Generate JAR'`
-* The JAR bundle will be generated in the `targer` folder within the project directory.
-* Rename the generated JAR bundle to contain only integers and characters.
+The project needs to be packed as a fat jar file. To instruct Maven to generate a Fat JAR from the project, one needs to incorporate a Fat JAR build configuration into the project's POM file. In the pom.xml file the below given configuration needs to be added:
 
-#### Step 7. Upload the JAR bundle to the OpenLAP.
-The newly implemented analytics method is now ready to be uploaded to the OpenLAP through the administration panel including the JAR file and parameters like, analytics method name, description, and name of the implementing class including package (the class that extends the `AnalyticsMethod` abstract class). 
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.1.1</version>
+
+            <configuration>
+                <descriptorRefs>
+                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+            </configuration>
+
+            <executions>
+                <execution>
+                    <id>make-assembly</id>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>single</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+Following this, run the following command in the terminal of IntelliJ: "mvn clean package". Maven will then generate a Fat JAR in the "target" directory. The fat jar file will have the following format "my-project-name-jar-with-dependencies.jar".
+
+#### Step 7. Upload the JAR file using the OpenLAP administration panel.
+Submit the JAR file to OpenLAP by uploading it through the administration panel. 
